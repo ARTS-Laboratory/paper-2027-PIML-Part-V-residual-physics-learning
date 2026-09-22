@@ -10,11 +10,11 @@ This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 Intern
 
 #### Bibtex
 
-@Misc{ARTSLabDatasetDatasetLPBFThin,  
+@Misc{Zardian2026PaperResidualPhysics,  
   author = {Mohsen Gol Zardian and Caleb Williams and Austin R.J. Downey},  
   title  = {Paper-Residual-Physics-Learning},  
   groups = {{ARTS-L}ab},  
-  note = {2026},  
+  year = {2026},  
   url    = {https://github.com/paper-2027-PIML-Part-V-residual-physics-learning},  
 }  
 
