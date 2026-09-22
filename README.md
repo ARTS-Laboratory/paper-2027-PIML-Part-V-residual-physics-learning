@@ -1,7 +1,5 @@
-# paper-2027-residual-physics-learning
-paper-2027-residual physics learning
-
-Physics-Informed Machine Learning Part V: Residual Learning for State Correction in Structural State Estimation under Model Bias
+# Paper 2027 Residual Physics Learning
+This repository holds important code and artifacts for the 2027 SEM-IMAC paper "Physics-Informed Machine Learning Part V: Residual Learning for State Correction in Structural State Estimation under Model Bias".
 
 ## Licensing and Citation
 This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License [cc-by-sa 4.0].
