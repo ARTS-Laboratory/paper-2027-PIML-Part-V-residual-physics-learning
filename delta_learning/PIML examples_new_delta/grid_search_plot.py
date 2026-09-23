@@ -8,6 +8,20 @@ from mpl_toolkits.mplot3d import Axes3D  # keep for 3D
 import matplotlib.tri as mtri
 from matplotlib.colors import PowerNorm, LogNorm, Normalize, ListedColormap
 
+plt.rcParams.update({'image.cmap': 'viridis'})
+cc = plt.rcParams['axes.prop_cycle'].by_key()['color']
+plt.rcParams.update({'font.serif': ['Times New Roman', 'Times', 'DejaVu Serif',
+                                    'Bitstream Vera Serif', 'Computer Modern Roman', 'New Century Schoolbook',
+                                    'Century Schoolbook L',  'Utopia', 'ITC Bookman', 'Bookman',
+                                    'Nimbus Roman No9 L', 'Palatino', 'Charter', 'serif']})
+plt.rcParams.update({'font.family': 'serif'})
+plt.rcParams.update({'font.size': 10})
+plt.rcParams.update({'mathtext.fontset': 'custom'})
+plt.rcParams.update({'mathtext.rm': 'serif'})
+plt.rcParams.update({'mathtext.it': 'serif:italic'})
+plt.rcParams.update({'mathtext.bf': 'serif:bold'})
+plt.close('all')
+
 # 
 xlsx_path = r"hyperparameters_leaky_relu.xlsx"
 assert os.path.exists(xlsx_path), f"Excel not found: {xlsx_path}"
@@ -83,9 +97,8 @@ Z_log = np.log10(np.where(Z_lin > 0, Z_lin, 1e-6))   # geometry only
 
 tri = mtri.Triangulation(X, Y)
 
-COLOR_VMIN = float(np.nanmin(Z_lin))
-COLOR_VMAX = float(np.nanmax(Z_lin))
-
+COLOR_VMIN = .2 # changed minimum value for colorbar 
+COLOR_VMAX = 1 # changed maximum value for colorbar
 
 cmap = plt.get_cmap("viridis")
 
@@ -108,34 +121,35 @@ tri_vals = Z_lin[tri.triangles].max(axis=1)
 facecolors_linear = cmap(norm_linear_colors(tri_vals))
 
 #  plot 2 (log) 
-# 
 EPS = 1e-6
-vmin_log = 10 ** np.floor(np.log10(max(COLOR_VMIN, EPS)))
-vmax_log = 10 ** np.ceil(np.log10(COLOR_VMAX))
+vmin_log = COLOR_VMIN
+vmax_log = COLOR_VMAX
 norm_log_colors = LogNorm(vmin=vmin_log, vmax=vmax_log)
 facecolors_log = cmap(norm_log_colors(tri_vals))
 
 # colorbar ticks
-n_ticks = 6
+n_ticks = 5
+ticks_linear = np.linspace(COLOR_VMIN, COLOR_VMAX, n_ticks)
 ticks_linear = np.linspace(COLOR_VMIN, COLOR_VMAX, n_ticks)
 labels_linear = [_fmt_val(t) for t in ticks_linear]
-kmin = int(np.log10(vmin_log))
+kmin=np.log10(.2) # set kmin to be log10(.2)
 kmax = int(np.log10(vmax_log))
-ticks_log = 10.0 ** np.arange(kmin, kmax + 1)
+ticks_log = np.logspace(kmin,kmax,n_ticks)
+ticks_log=np.round(ticks_log,2)
 labels_log = [_fmt_val(t) for t in ticks_log]
 
 # Plot 1: 3D Surface (Linear Z) 
 P1 = {
-    "figsize": (3.8, 3.6),
-    "elev": 28, "azim": -60,
+    "figsize": (3.8,3.6),
+    "elev": 28, "azim": 45,
     "surface_alpha": 1.0, "surface_linewidth": 0.2,
     "show_scatter": True, "scatter_size": 28, "scatter_edgecolor": "k",
     "xlabel": "hidden layers", "ylabel": "nodes per layer", "zlabel": "RMSE",
     "zlabel_rotation": 90,
-    "label_size": 16, "tick_size": 14,
+    "label_size": 11, "tick_size": 11,
     "dpi": 500,
     "save_path": os.path.join(os.path.dirname(xlsx_path), "rmse_3d_linear.png"),
-}
+} # changed azimuth to 45 for both plots; consistent with Part III plots
 
 fig = plt.figure(figsize=P1["figsize"])
 ax = fig.add_subplot(111, projection="3d")
@@ -152,27 +166,32 @@ if P1["show_scatter"]:
     ax.scatter(X, Y, Z_lin, c=Z_lin, cmap=cmap, norm=norm_linear_colors,
                s=P1["scatter_size"], edgecolor=P1["scatter_edgecolor"])
 
+# change z-tick labels
+ax.set_zlim(.2, 1) # z axis from .2 to 1
+ax.set_ylim(0,100) # changed nodes layer to include 0
+
 # colorbar adjustment for plot 1
-sm1 = plt.cm.ScalarMappable(cmap=warped_cmap_linearbar, norm=lin_norm_for_bar); sm1.set_array([])
-cb1 = fig.colorbar(sm1, ax=ax, shrink=0.7, aspect=14, pad=0.06)
+sm1 = plt.cm.ScalarMappable(cmap=warped_cmap_linearbar, 
+                            norm=lin_norm_for_bar);sm1.set_array([])
+cb1 = fig.colorbar(sm1, ax=ax, shrink=1, aspect=14, pad=0.06,location='top')
 cb1.set_label("RMSE", fontsize=P1["label_size"])
-cb1.ax.tick_params(labelsize=P1["tick_size"])
+cb1.ax.tick_params(labelsize=P1['tick_size'])
 cb1.set_ticks(ticks_linear); cb1.set_ticklabels(labels_linear)
 
 apply_3d_common(ax, P1)
-plt.tight_layout()
+ax.set_position([0.2,.1,.65,.65]) # adjusted position of the graph
 plt.savefig(P1["save_path"], dpi=P1["dpi"], bbox_inches="tight")
 print("Saved:", P1["save_path"])
 
 #%%  plot 3- 3D Surface (TRUE log Z via log10 transform) =========
 P2 = {
-    "figsize": (3.8, 3.6),
-    "elev": 28, "azim": -60,
+    "figsize": (3.8,3.6),
+    "elev": 28, "azim": 45,
     "surface_alpha": 1.0, "surface_linewidth": 0.2,
     "show_scatter": True, "scatter_size": 28, "scatter_edgecolor": "k",
-    "xlabel": "hidden layers", "ylabel": "nodes per layer", "zlabel": "RMSE (log scale)",
+    "xlabel": "hidden layers", "ylabel": "nodes per layer", "zlabel": "RMSE",
     "zlabel_rotation": 90,
-    "label_size": 16, "tick_size": 14,
+    "label_size": 11, "tick_size": 11,
     "dpi": 500,
     "save_path": os.path.join(os.path.dirname(xlsx_path), "rmse_3d_logtrue.png"),
 }
@@ -195,19 +214,23 @@ if P2["show_scatter"]:
 # Z-axis ticks in log10 units
 kmin_axis = int(np.floor(np.nanmin(Z_log)))
 kmax_axis = int(np.ceil(np.nanmax(Z_log)))
-ax.set_zticks(list(range(kmin_axis, kmax_axis + 1)))
-ax.set_zticklabels([rf"$10^{{{k}}}$" for k in range(kmin_axis, kmax_axis + 1)])
+kmin_axis=np.log10(.2) # set kmin_axis to be log10(.2)
+ax.set_zticks(np.linspace(kmin_axis,kmax_axis+1,2))
+ytick=np.linspace(kmin_axis,kmax_axis,n_ticks) # 
+ax.set_zticks(ytick) 
+ax.set_zticklabels([rf"${10**k:.1f}$" for k in ytick])
 ax.set_zlim(kmin_axis, kmax_axis)
+ax.set_ylim(0,100) # changed nodes layer to include 0
 
 # colorbar for Plot 2
 sm2 = plt.cm.ScalarMappable(cmap=cmap, norm=norm_log_colors); sm2.set_array([])
-cb2 = fig.colorbar(sm2, ax=ax, shrink=0.7, aspect=14, pad=0.06)
+cb2 = fig.colorbar(sm2, ax=ax, shrink=1, aspect=14, pad=0.06,location='top')
 cb2.set_label("RMSE (log scale)", fontsize=P2["label_size"])
 cb2.ax.tick_params(labelsize=P2["tick_size"])
 cb2.set_ticks(ticks_log); cb2.set_ticklabels(labels_log)
 
 apply_3d_common(ax, P2)
-plt.tight_layout()
+ax.set_position([0.2,.1,.65,.65]) # adjusted position of the graph
 plt.savefig(P2["save_path"], dpi=P2["dpi"], bbox_inches="tight")
 print("Saved:", P2["save_path"])
 #%% if needed
