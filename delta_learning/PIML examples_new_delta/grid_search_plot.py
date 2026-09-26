@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # keep for 3D
 import matplotlib.tri as mtri
 from matplotlib.colors import PowerNorm, LogNorm, Normalize, ListedColormap
+from fractions import Fraction
 
 plt.rcParams.update({'image.cmap': 'viridis'})
 cc = plt.rcParams['axes.prop_cycle'].by_key()['color']
@@ -97,8 +98,8 @@ Z_log = np.log10(np.where(Z_lin > 0, Z_lin, 1e-6))   # geometry only
 
 tri = mtri.Triangulation(X, Y)
 
-COLOR_VMIN = .2 # changed minimum value for colorbar 
-COLOR_VMAX = 1 # changed maximum value for colorbar
+COLOR_VMIN = .2
+COLOR_VMAX = float(np.nanmax(Z_lin))
 
 cmap = plt.get_cmap("viridis")
 
@@ -122,20 +123,18 @@ facecolors_linear = cmap(norm_linear_colors(tri_vals))
 
 #  plot 2 (log) 
 EPS = 1e-6
-vmin_log = COLOR_VMIN
-vmax_log = COLOR_VMAX
+vmin_log = 10 ** np.floor(np.log10(max(COLOR_VMIN, EPS)))
+vmax_log = 10 ** np.ceil(np.log10(COLOR_VMAX))
 norm_log_colors = LogNorm(vmin=vmin_log, vmax=vmax_log)
 facecolors_log = cmap(norm_log_colors(tri_vals))
 
 # colorbar ticks
-n_ticks = 5
-ticks_linear = np.linspace(COLOR_VMIN, COLOR_VMAX, n_ticks)
-ticks_linear = np.linspace(COLOR_VMIN, COLOR_VMAX, n_ticks)
+n_ticks = 6
+ticks_linear = np.round(np.linspace(.2, COLOR_VMAX, n_ticks),2)
 labels_linear = [_fmt_val(t) for t in ticks_linear]
-kmin=np.log10(.2) # set kmin to be log10(.2)
+kmin = int(np.log10(vmin_log))
 kmax = int(np.log10(vmax_log))
-ticks_log = np.logspace(kmin,kmax,n_ticks)
-ticks_log=np.round(ticks_log,2)
+ticks_log = np.round(np.logspace(kmin,kmax,6),2)
 labels_log = [_fmt_val(t) for t in ticks_log]
 
 # Plot 1: 3D Surface (Linear Z) 
@@ -167,8 +166,7 @@ if P1["show_scatter"]:
                s=P1["scatter_size"], edgecolor=P1["scatter_edgecolor"])
 
 # change z-tick labels
-ax.set_zlim(.2, 1) # z axis from .2 to 1
-ax.set_ylim(0,100) # changed nodes layer to include 0
+ax.set_zlim(0, 1) # z axis from .2 to 1
 
 # colorbar adjustment for plot 1
 sm1 = plt.cm.ScalarMappable(cmap=warped_cmap_linearbar, 
@@ -214,13 +212,16 @@ if P2["show_scatter"]:
 # Z-axis ticks in log10 units
 kmin_axis = int(np.floor(np.nanmin(Z_log)))
 kmax_axis = int(np.ceil(np.nanmax(Z_log)))
-kmin_axis=np.log10(.2) # set kmin_axis to be log10(.2)
 ax.set_zticks(np.linspace(kmin_axis,kmax_axis+1,2))
-ytick=np.linspace(kmin_axis,kmax_axis,n_ticks) # 
-ax.set_zticks(ytick) 
-ax.set_zticklabels([rf"${10**k:.1f}$" for k in ytick])
+ytick=np.round(np.linspace(kmin_axis,kmax_axis,4),1) # 
+ax.set_zticks(ytick)
+ax.set_zticklabels([rf"$10^{{{k}}}$" for k in ytick])
+ytick_label=[]
+for k in ytick:
+    ytick_label.append(Fraction(f'{k}'))
+ax.set_zticklabels(rf"$10^{{{k}}}$" for k in ytick_label)
+
 ax.set_zlim(kmin_axis, kmax_axis)
-ax.set_ylim(0,100) # changed nodes layer to include 0
 
 # colorbar for Plot 2
 sm2 = plt.cm.ScalarMappable(cmap=cmap, norm=norm_log_colors); sm2.set_array([])
