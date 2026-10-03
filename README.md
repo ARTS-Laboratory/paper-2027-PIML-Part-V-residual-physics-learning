@@ -13,7 +13,7 @@ This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 Intern
   title  = {Paper-Residual-Physics-Learning},  
   groups = {{ARTS-L}ab},  
   year = {2026},  
-  url    = {https://github.com/paper-2027-PIML-Part-V-residual-physics-learning},  
+  url    = {github.com/ARTS-Laboratory/paper-2027-PIML-Part-V-residual-physics-learning},  
 }  
 
 <p align="center">
